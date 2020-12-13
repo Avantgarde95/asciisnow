@@ -1,6 +1,6 @@
 # ASCII snow
 
-Rain of the characters
+Snow of the characters
 
 ![App](https://github.com/Avantgarde95/asciisnow/blob/master/image/Screenshot.png)
 
