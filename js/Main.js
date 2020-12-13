@@ -24,40 +24,50 @@ function copyMatrix(matrix) {
     });
 }
 
-function updateMatrix(matrix) {
-    var width = matrix[0].length,
-        height = matrix.length,
+function generateSnow(snowMatrix) {
+    var width = snowMatrix[0].length,
+        height = snowMatrix.length,
         x, y;
 
     for (y = height - 1; y > 0; y--) {
-        matrix[y] = matrix[y - 1].slice();
+        snowMatrix[y] = snowMatrix[y - 1].slice();
     }
 
     for (x = 0; x < width; x++) {
-        if (chooseRandomInteger(0, 20) === 0) {
-            matrix[0][x] = '#&nbsp;';
-        } else {
-            matrix[0][x] = '&nbsp;&nbsp;';
-        }
+        snowMatrix[0][x] = chooseRandomInteger(0, 12) === 0;
     }
 }
 
-function drawMatrix(element, matrix, maskPixels) {
-    var maskedMatrix = copyMatrix(matrix),
-        width = maskedMatrix[0].length,
-        height = maskedMatrix.length,
+function stackSnow(snowMatrix, stackStateMatrix, lowestPixelMatrix) {
+    var width = snowMatrix[0].length,
+        height = snowMatrix.length,
         x, y;
 
     for (y = 0; y < height; y++) {
         for (x = 0; x < width; x++) {
-            if (maskPixels[(width * y + x) * 4 + 3] > 0) {
-                maskedMatrix[y][x] = '&nbsp;&nbsp;';
+            if (
+                snowMatrix[y][x]
+                && stackStateMatrix[y][x] === 1
+                && (y + 1 === height || stackStateMatrix[y + 1][x] !== 1)
+            ) {
+                stackStateMatrix[y][x] = 2;
+            }
+
+            if (lowestPixelMatrix[y][x]) {
+                snowMatrix[y][x] = false;
             }
         }
     }
+}
 
-    element.innerHTML = maskedMatrix.map(function (row) {
-        return row.join('');
+function drawSnowMatrix(element, snowMatrix, stackStateMatrix) {
+    var width = snowMatrix[0].length,
+        height = snowMatrix.length;
+
+    element.innerHTML = snowMatrix.map(function (row, y) {
+        return row.map(function (isSnow, x) {
+            return (isSnow || stackStateMatrix[y][x] === 2) ? '#&nbsp;' : '&nbsp;&nbsp;';
+        }).join('');
     }).join('<br>');
 }
 
@@ -74,8 +84,14 @@ loadImage('./image/Cat.png', function (image) {
         imageLink = getElement('ImageLink'),
         width = 40,
         height = 30,
-        matrix = createMatrix(width, height, '&nbsp;&nbsp;'),
-        pixels;
+        // true: Snow, false: Empty.
+        snowMatrix = createMatrix(width, height, false),
+        // 0: Ignore, 1: Should be stacked, 2: Already stacked.
+        stackStateMatrix = createMatrix(width, height, 0),
+        // true if pixel[Y][X] = max[0 <= y < height](pixel[y][X].alpha > 0).
+        lowestPixelMatrix = createMatrix(width, height, false),
+        pixels,
+        x, y;
 
     console.log('Loaded the image!');
     imageLink.setAttribute('href', image.src);
@@ -83,10 +99,28 @@ loadImage('./image/Cat.png', function (image) {
     pixels = getImagePixels(image, width, height);
     console.log('Got the pixels!');
 
-    drawMatrix(board, matrix, pixels);
+    for (y = 0; y < height; y++) {
+        for (x = 0; x < width; x++) {
+            if (pixels[(width * y + x) * 4 + 3] > 0) {
+                stackStateMatrix[y][x] = 1;
+            }
+        }
+    }
+
+    for (x = 0; x < width; x++) {
+        for (y = height - 1; y >= 0; y--) {
+            if (stackStateMatrix[y][x] > 0) {
+                lowestPixelMatrix[y][x] = true;
+                break;
+            }
+        }
+    }
+
+    drawSnowMatrix(board, snowMatrix, stackStateMatrix);
 
     setInterval(function () {
-        updateMatrix(matrix);
-        drawMatrix(board, matrix, pixels);
-    }, 200);
+        generateSnow(snowMatrix);
+        stackSnow(snowMatrix, stackStateMatrix, lowestPixelMatrix);
+        drawSnowMatrix(board, snowMatrix, stackStateMatrix);
+    }, 100);
 });
