@@ -72,6 +72,10 @@ function drawSnowMatrix(element, snowMatrix, stackStateMatrix) {
 }
 
 var links = getAllElements('Link'),
+    queryMap = getQueryMap(),
+    imagePathMap = {
+        'cat': 'image/Cat.png'
+    },
     i;
 
 for (i = 0; i < links.length; i++) {
@@ -79,7 +83,11 @@ for (i = 0; i < links.length; i++) {
     links[i].setAttribute('rel', 'noopener noreferrer');
 }
 
-loadImage('./image/Cat.png', function (image) {
+if (!queryMap.hasOwnProperty('image')) {
+    queryMap.image = 'cat';
+}
+
+loadImage(imagePathMap[queryMap.image.toLowerCase()], function (image) {
     var board = getElement('Board'),
         imageLink = getElement('ImageLink'),
         width = 40,

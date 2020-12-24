@@ -37,3 +37,23 @@ function getImagePixels(image, width, height) {
 
     return context.getImageData(0, 0, canvas.width, canvas.height).data;
 }
+
+function getQueryMap() {
+    var url = document.location.href,
+        queryIndex = url.indexOf('?'),
+        result,
+        i;
+
+    if (queryIndex < 0) {
+        return {};
+    }
+
+    result = {};
+
+    url.substring(queryIndex + 1).split('&').forEach(function (query) {
+        var tokens = query.split('=');
+        result[tokens[0]] = decodeURIComponent(tokens[1]);
+    });
+
+    return result;
+}
