@@ -74,7 +74,8 @@ function drawSnowMatrix(element, snowMatrix, stackStateMatrix) {
 var links = getAllElements('Link'),
     queryMap = getQueryMap(),
     imagePathMap = {
-        'cat': 'image/Cat.png'
+        cat: 'image/Cat.png',
+        christmas: 'image/Christmas.png'
     },
     i;
 
